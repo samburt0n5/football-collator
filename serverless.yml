@@ -1,0 +1,104 @@
+service: kill-switch
+
+provider:
+  name: aws
+  stage: ${opt:stage, 'prod'}
+  region: ${env:AWS_REGION, 'eu-west-2'}
+
+package:
+  individually: true
+
+functions:
+  killSwitch:
+    name: kill-switch-${sls:stage}
+    timeout: 300
+    memorySize: 1024
+    package:
+      artifact: node/archive.zip
+    events:
+      - sns:
+          arn: !Ref killSwitchBudgetTopic
+          topicName: killSwitchBudgetTopic
+    handler: app.handler
+    runtime: nodejs20.x
+    role: killSwitchRole
+    environment:
+      ENVIRONMENT: ${opt:stage, 'prod'}
+
+
+resources:
+  Resources:
+    killSwitchBudgetTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: killSwitchBudgetTopic
+        Subscription:
+          - Endpoint: { "Fn::GetAtt": ["KillSwitchLambdaFunction", "Arn" ] }
+            Protocol: "lambda"
+    killSwitchBudget:
+      Type: AWS::Budgets::Budget
+      Properties:
+        Budget:
+          BudgetLimit:
+            Amount: 99
+            Unit: USD
+          TimeUnit: MONTHLY
+          BudgetType: COST
+        NotificationsWithSubscribers:
+          - Notification:
+              NotificationType: ACTUAL
+              ComparisonOperator: GREATER_THAN
+              Threshold: 99
+            Subscribers:
+              - SubscriptionType: EMAIL
+                Address: sam.burtonlaurie@hotmail.co.uk
+              - SubscriptionType: SNS
+                Address: !Ref killSwitchBudgetTopic
+    killSwitchRole:
+      Type: AWS::IAM::Role
+      Properties:
+        Path: /my/cust/path/
+        RoleName: kill-switch-${opt:stage, 'prod'}
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: eventBridge
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - scheduler:*
+                    - events:*
+                    - iam:PassRole
+                  Resource: "*"
+          - PolicyName: apigw
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - apigateway:*
+                  Resource: "*"
+          - PolicyName: dynamodb
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - dynamodb:*
+                  Resource: "*"
+          - PolicyName: myPolicyNameCloudWatch
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - logs:*
+                  Resource: "*"

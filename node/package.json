@@ -1,0 +1,15 @@
+{
+  "name": "football-data-collator",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "prebuild": "if [ -f archive.zip ]; then rm archive.zip; fi",
+    "build": "zip -9rq archive.zip package*.json node_modules && cd src && zip -9rq ../archive.zip .",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@aws-sdk/client-api-gateway": "^3.596.0",
+    "@aws-sdk/client-scheduler": "^3.596.0",
+    "debug": "~2.6.9"
+  }
+}
