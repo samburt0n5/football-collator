@@ -1,50 +1,60 @@
-const { APIGatewayClient, GetStagesCommand, GetStageCommand, UpdateStageCommand, GetRestApisCommand } = require('@aws-sdk/client-api-gateway');
-const apiGatewayClient = new APIGatewayClient({ region: "eu-west-2" });
+const axios = require('axios');
+const cheerio = require('cheerio');
 
-const setStageLimits = async(restApiId, stageName) => {
-  const getStageCommand = new GetStageCommand({restApiId, stageName});
-  const stage = await apiGatewayClient.send(getStageCommand)
+function findParentOrSiblingWithSelector($, element, selector) {
+  let parent = $(element).parent();
+  if (parent.is(selector)) {
+    return parent;
+  }
 
-  const updateStageCommand = new UpdateStageCommand({
-    restApiId,
-    stageName,
-    patchOperations: [{
-      op: 'replace',
-      path: '/*/*/throttling/burstLimit',
-      value: '0'
-    },
-      {
-        op: 'replace',
-        path: '/*/*/throttling/rateLimit',
-        value: '0'
-      },
-    ]
-  });
-  await apiGatewayClient.send(updateStageCommand)
+  let sibling = parent.prev();
+  if (sibling.is(selector)) {
+    return sibling;
+  }
 
-  console.log(stage + ' updated')
+  while (parent.length && !parent.is(selector)) {
+    parent = parent.parent();
+    if (parent.is(selector)) {
+      return parent;
+    }
+
+    sibling = parent.prev();
+    if (sibling.is(selector)) {
+      return sibling;
+    }
+  }
+
+  return null;
 }
 
-const disableApiGateways = async() => {
-  const getRestApisCommand = new GetRestApisCommand();
-  // const apiIds = (await apiGatewayClient.send(command)).items.map(a => a.id)
-  const apiIds = (await apiGatewayClient.send(getRestApisCommand)).items.map(a => a.id)
+const getScoresData = async(date) => {
+  console.log("Getting scores data")
+  axios.get('https://www.bbc.com/sport/football/scores-fixtures/'+date)
+    .then(response => {
+      const html = response.data;
+      const $ = cheerio.load(html);
+      const teamHomeDivs = $('.ssrcss-bon2fo-WithInlineFallback-TeamHome.e1efi6g53');
+      const teamAwayDivs = $('.ssrcss-nvj22c-WithInlineFallback-TeamAway.e1efi6g52');
 
-  console.log("API Id's:" + apiIds)
+      let fixtures = [];
 
-  await Promise.all(apiIds.map(async(restApiId) => {
-    console.log("restApiId: "+restApiId)
-    const getStagesCommand = new GetStagesCommand({restApiId})
-    const stages = (await apiGatewayClient.send(getStagesCommand)).item
+      teamHomeDivs.each((i, elem) => {
+        const team1 = $(elem).find('span:first').text().trim();
+        const team2 = $(teamAwayDivs[i]).find('span:first').text().trim();
+        const dateElement = findParentOrSiblingWithSelector($, elem, 'div:has(h2.ssrcss-51z0b8-PrimaryHeading.ejnn8gi2)');
+        const date = dateElement.find('h2.ssrcss-51z0b8-PrimaryHeading.ejnn8gi2').text().trim();
+        fixtures.push({date, team1, team2});
+      });
 
-    console.log("stages : " + stages + "for api id: " + restApiId)
-    await Promise.all(stages.map(stage => setStageLimits(restApiId, stage.stageName)))
-  }))
+      console.log(fixtures);
+    })
+    .catch(console.error);
 
 }
+
+getScoresData("2024-06-17")
 
 exports.handler = async() => {
-  await disableApiGateways()
+  console.log("hi")
+  await getScoresData()
 };
-//
-// exports.handler = async () => (  console.log("hello world") );
