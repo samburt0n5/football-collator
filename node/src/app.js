@@ -27,17 +27,13 @@ const setStageLimits = async(restApiId, stageName) => {
 
 const disableApiGateways = async() => {
   const getRestApisCommand = new GetRestApisCommand();
-  // const apiIds = (await apiGatewayClient.send(command)).items.map(a => a.id)
   const apiIds = (await apiGatewayClient.send(getRestApisCommand)).items.map(a => a.id)
 
-  console.log("API Id's:" + apiIds)
-
   await Promise.all(apiIds.map(async(restApiId) => {
-    console.log("restApiId: "+restApiId)
     const getStagesCommand = new GetStagesCommand({restApiId})
     const stages = (await apiGatewayClient.send(getStagesCommand)).item
 
-    console.log("stages : " + stages + "for api id: " + restApiId)
+    console.log("Updating stages : " + stages + "for api id: " + restApiId)
     await Promise.all(stages.map(stage => setStageLimits(restApiId, stage.stageName)))
   }))
 
@@ -46,5 +42,3 @@ const disableApiGateways = async() => {
 exports.handler = async() => {
   await disableApiGateways()
 };
-//
-// exports.handler = async () => (  console.log("hello world") );
