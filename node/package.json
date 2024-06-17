@@ -10,7 +10,6 @@
   "dependencies": {
     "@aws-sdk/client-api-gateway": "^3.596.0",
     "@aws-sdk/client-scheduler": "^3.596.0",
-    "axios": "^1.7.2",
-    "cheerio": "^1.0.0-rc.12"
+    "debug": "~2.6.9"
   }
 }
