@@ -9,7 +9,7 @@ const calculateSeason = (date) => {
 
 const sendFixturesData = async (fixtures) => {
   console.log('Sending fixture data.');
-  return axios.post('https://hgpkzpc3vb.execute-api.eu-west-2.amazonaws.com/dev/fixtures/bulkImport', fixtures)
+  return axios.post(process.env.IMPORT_URL, fixtures)
     .then(function (response) {
       console.log(response);
       Promise.resolve();
@@ -84,7 +84,7 @@ const fetchData = async (date) => {
           club2Score: event.away?.score,
           competition: eventGroup.displayLabel,
           providerId: event.id,
-          season: (Array('Premier League', 'Bundesliga', 'La Liga', 'Ligue 1').includes(eventGroup.displayLabel)) ? calculateSeason(new Date(event.date.isoDate)) : '',
+          season: (Array('English Premier League', 'German Bundesliga', 'Spanish La Liga', 'French Ligue 1').includes(eventGroup.displayLabel)) ? calculateSeason(new Date(event.date.isoDate)) : '',
           goals: [
             ...extractGoals(event.home?.actions || []).map(goal => ({ ...goal, teamId: 'A' })),
             ...extractGoals(event.away?.actions || []).map(goal => ({ ...goal, teamId: 'B' })),

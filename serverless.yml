@@ -20,7 +20,7 @@ functions:
     role: footballCollatorRole
     environment:
       ENVIRONMENT: ${opt:stage, 'prod'}
-
+      IMPORT_URL: ${file(./config.${sls:stage}.json):IMPORT_URL}
 
 resources:
   Resources:
