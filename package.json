@@ -4,7 +4,7 @@
     "type": "git",
     "url": "https://github.com/samburt0n5/football-collator.git"
   },
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "prebuild": "if [ -f archive.zip ]; then rm archive.zip; fi",
