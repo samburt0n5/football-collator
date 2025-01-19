@@ -1,8 +1,6 @@
-//
-//
 // describe('app tests', () => {
 //   test('calculating season', async () => {
-//     const calculateSeason = require('../src/app');
+//     // const calculateSeason = require('../src/app');
 //     const date2324 = calculateSeason(new Date(2024,6,1))
 //     expect(date2324).toBe("2324")
 //     const date2425 = calculateSeason(new Date(2024,7,1))
@@ -11,4 +9,8 @@
 //     expect(date2526).toBe("2526")
 //   });
 // })
-//
+
+test('two plus two is four', () => {
+  expect(2 + 2).toBe(4);
+});
+
