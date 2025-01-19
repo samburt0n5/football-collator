@@ -7,8 +7,11 @@
     "build": "zip -9rq archive.zip package*.json node_modules && cd src && zip -9rq ../archive.zip .",
     "test": "jest"
   },
-"dependencies": {
+  "dependencies": {
     "axios": "^1.7.2",
     "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
   }
 }
